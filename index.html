@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter画像ジェネレーター</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #fff;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 40px;
+            color: #888;
+            letter-spacing: 0.05em;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 1rem;
+            color: #fff;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #444;
+        }
+
+        textarea::placeholder {
+            color: #444;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        input[type="number"],
+        select {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 0.9rem;
+            color: #fff;
+            width: 120px;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #444;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 200px;
+            height: 6px;
+            background: #222;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slider-value {
+            font-size: 0.9rem;
+            color: #fff;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .download-btn {
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 16px 40px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 16px;
+        }
+
+        .download-btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .preview-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .preview-wrapper {
+            position: relative;
+            background: #111;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .preview-canvas-container {
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        #preview-canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .size-indicator {
+            font-size: 0.75rem;
+            color: #444;
+            text-align: center;
+        }
+
+        .tips {
+            margin-top: 40px;
+            padding: 24px;
+            background: #111;
+            border-radius: 8px;
+            border-left: 3px solid #333;
+        }
+
+        .tips h3 {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+        }
+
+        .tips p {
+            font-size: 0.9rem;
+            color: #888;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Twitter 画像ジェネレーター</h1>
+        
+        <div class="workspace">
+            <div class="input-section">
+                <div>
+                    <label for="text-input">テキストを入力</label>
+                    <textarea id="text-input" placeholder="ここにテキストを入力してください..."></textarea>
+                </div>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="font-size">文字サイズ</label>
+                        <div class="slider-container">
+                            <input type="range" id="font-size" value="48" min="12" max="200">
+                            <span class="slider-value" id="font-size-value">48px</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="font-weight">太さ</label>
+                        <select id="font-weight">
+                            <option value="400">Regular</option>
+                            <option value="500">Medium</option>
+                            <option value="700" selected>Bold</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="line-height">行間</label>
+                        <div class="slider-container">
+                            <input type="range" id="line-height" value="1.6" min="1" max="3" step="0.1">
+                            <span class="slider-value" id="line-height-value">1.6</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="text-align">配置</label>
+                        <select id="text-align">
+                            <option value="left">左揃え</option>
+                            <option value="center" selected>中央</option>
+                            <option value="right">右揃え</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="download-btn" id="download-btn">PNG でダウンロード</button>
+
+                <div class="tips">
+                    <h3>ヒント</h3>
+                    <p>
+                        テキストを入力するとリアルタイムでプレビューが更新されます。<br>
+                        画像サイズは 871×1071px（Twitter推奨サイズ）です。
+                    </p>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <label>プレビュー</label>
+                <div class="preview-wrapper">
+                    <div class="preview-canvas-container">
+                        <canvas id="preview-canvas" width="871" height="1071"></canvas>
+                    </div>
+                </div>
+                <div class="size-indicator">871 × 1071 px</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('preview-canvas');
+        const ctx = canvas.getContext('2d');
+        const textInput = document.getElementById('text-input');
+        const fontSizeInput = document.getElementById('font-size');
+        const fontSizeValue = document.getElementById('font-size-value');
+        const fontWeightInput = document.getElementById('font-weight');
+        const lineHeightInput = document.getElementById('line-height');
+        const lineHeightValue = document.getElementById('line-height-value');
+        const textAlignInput = document.getElementById('text-align');
+        const downloadBtn = document.getElementById('download-btn');
+
+        const WIDTH = 871;
+        const HEIGHT = 1071;
+        const PADDING = 80;
+
+        function drawCanvas() {
+            // 背景を黒で塗りつぶし
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            const text = textInput.value || 'テキストを入力...';
+            const fontSize = parseInt(fontSizeInput.value) || 48;
+            const fontWeight = fontWeightInput.value;
+            const lineHeight = parseFloat(lineHeightInput.value) || 1.6;
+            const textAlign = textAlignInput.value;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `${fontWeight} ${fontSize}px 'Noto Sans JP', sans-serif`;
+            ctx.textBaseline = 'top';
+            ctx.textAlign = textAlign;
+
+            // テキストを行に分割（手動改行と自動折り返し）
+            const maxWidth = WIDTH - PADDING * 2;
+            const lines = [];
+            const paragraphs = text.split('\n');
+
+            paragraphs.forEach(paragraph => {
+                if (paragraph === '') {
+                    lines.push('');
+                    return;
+                }
+
+                const words = paragraph.split('');
+                let currentLine = '';
+
+                words.forEach(char => {
+                    const testLine = currentLine + char;
+                    const metrics = ctx.measureText(testLine);
+
+                    if (metrics.width > maxWidth && currentLine !== '') {
+                        lines.push(currentLine);
+                        currentLine = char;
+                    } else {
+                        currentLine = testLine;
+                    }
+                });
+
+                if (currentLine) {
+                    lines.push(currentLine);
+                }
+            });
+
+            // テキストの総高さを計算
+            const lineHeightPx = fontSize * lineHeight;
+
+            // 上から詰めて配置
+            let startY = PADDING;
+
+            // X座標を配置に応じて設定
+            let x;
+            if (textAlign === 'left') {
+                x = PADDING;
+            } else if (textAlign === 'right') {
+                x = WIDTH - PADDING;
+            } else {
+                x = WIDTH / 2;
+            }
+
+            // 各行を描画
+            lines.forEach((line, index) => {
+                const y = startY + index * lineHeightPx;
+                ctx.fillText(line, x, y);
+            });
+        }
+
+        function downloadImage() {
+            // 一時的なキャンバスを作成して高品質で出力
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = WIDTH;
+            tempCanvas.height = HEIGHT;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // 背景を黒で塗りつぶし
+            tempCtx.fillStyle = '#000000';
+            tempCtx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            const text = textInput.value || 'テキストを入力...';
+            const fontSize = parseInt(fontSizeInput.value) || 48;
+            const fontWeight = fontWeightInput.value;
+            const lineHeight = parseFloat(lineHeightInput.value) || 1.6;
+            const textAlign = textAlignInput.value;
+
+            tempCtx.fillStyle = '#ffffff';
+            tempCtx.font = `${fontWeight} ${fontSize}px 'Noto Sans JP', sans-serif`;
+            tempCtx.textBaseline = 'top';
+            tempCtx.textAlign = textAlign;
+
+            // テキストを行に分割
+            const maxWidth = WIDTH - PADDING * 2;
+            const lines = [];
+            const paragraphs = text.split('\n');
+
+            paragraphs.forEach(paragraph => {
+                if (paragraph === '') {
+                    lines.push('');
+                    return;
+                }
+
+                const words = paragraph.split('');
+                let currentLine = '';
+
+                words.forEach(char => {
+                    const testLine = currentLine + char;
+                    const metrics = tempCtx.measureText(testLine);
+
+                    if (metrics.width > maxWidth && currentLine !== '') {
+                        lines.push(currentLine);
+                        currentLine = char;
+                    } else {
+                        currentLine = testLine;
+                    }
+                });
+
+                if (currentLine) {
+                    lines.push(currentLine);
+                }
+            });
+
+            const lineHeightPx = fontSize * lineHeight;
+            let startY = PADDING;
+
+            let x;
+            if (textAlign === 'left') {
+                x = PADDING;
+            } else if (textAlign === 'right') {
+                x = WIDTH - PADDING;
+            } else {
+                x = WIDTH / 2;
+            }
+
+            lines.forEach((line, index) => {
+                const y = startY + index * lineHeightPx;
+                tempCtx.fillText(line, x, y);
+            });
+
+            // Blob形式でダウンロード
+            tempCanvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'twitter-image.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        }
+
+        // イベントリスナー
+        textInput.addEventListener('input', drawCanvas);
+        fontSizeInput.addEventListener('input', () => {
+            fontSizeValue.textContent = fontSizeInput.value + 'px';
+            drawCanvas();
+        });
+        fontWeightInput.addEventListener('change', drawCanvas);
+        lineHeightInput.addEventListener('input', () => {
+            lineHeightValue.textContent = lineHeightInput.value;
+            drawCanvas();
+        });
+        textAlignInput.addEventListener('change', drawCanvas);
+        downloadBtn.addEventListener('click', downloadImage);
+
+        // フォント読み込み後に初期描画
+        document.fonts.ready.then(() => {
+            drawCanvas();
+        });
+
+        // 初期描画
+        drawCanvas();
+    </script>
+</body>
+</html>
